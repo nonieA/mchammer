@@ -18,13 +18,6 @@ def min_max(arr,seed):
         new_arr = np.vstack([new_arr,add])
     return(new_arr.T)
 
-def uniform(arr,seed):
-    np.random.seed(seed)
-    new_arr = np.empty((0,arr.shape[0]))
-    for i in arr.T:
-        add = np.linspace(min(i),max(i),len(i))
-        new_arr = np.vstack([new_arr, add])
-    return(new_arr.T)
 
 def pca_trans(arr,seed):
     np.random.seed(seed)
@@ -39,5 +32,17 @@ def pca_trans(arr,seed):
         gaus_arr = np.vstack([gaus_arr,add])
     return(np.dot(gaus_arr.T,eig))
 
+
+test_df = make_classification(n_samples = 100,
+                     n_features= 2,
+                     n_informative = 2,
+                     n_redundant= 0,
+                     n_classes = 2,
+                     n_clusters_per_class = 1,
+                     class_sep= 2)
+td2 = test_df
+td_rand = random_order(td2,4)
+td_minmax = min_max(td2,4)
+td_pca = pca_trans(td2,4)
 
 
