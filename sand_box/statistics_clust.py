@@ -55,9 +55,3 @@ def km_out(df,k,y):
                 'match': acc(y,labels)}
     return(out_dict)
 
-
-km = KMeans(n_clusters=4)
-
-km = km.fit(td2)
-
-labels = km.labels_
