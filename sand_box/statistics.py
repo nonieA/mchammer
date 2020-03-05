@@ -30,13 +30,18 @@ def c_mat_maker(labels):
 
 def acc(y_true,y_pred):
     conf = confusion_matrix(y_true,y_pred)
-    indx_list =
-    for i in len(conf):
-        indx = np.unravel_index(np.argmax(conf, axis=None), conf.shape)
-        conf = np.delete(conf,indx[0], 0)
-        conf = np.delete(conf, indx[1], 1)
-
-
+    conf_list = conf.flatten()
+    indx_list = np.flip(np.argsort(conf_list))
+    indx_list = [[int(i/len(conf)),i%len(conf)] for i in indx_list]
+    x_coords = [i[0] for i in indx_list]
+    y_coords = [i[1] for i in indx_list]
+    indx_list = [indx_list[0]] + [indx_list[i] for i in range(1,len(indx_list))
+                                if indx_list[i][0] not in x_coords[0:i-1] and indx_list[i][1] not in y_coords[0:i-1]]
+    og_nm = [i[1] for i in indx_list]
+    new_nm = [i[0] for i in indx_list]
+    y_pred2 = [new_nm[og_nm.index(i)] for i in y_pred]
+    correct = sum(1 for i in range(len(y_true)) if y_true[i] == y_pred2[i])/len(y_true)
+    return(correct)
 
 def km_out(df,k,y):
     km = KMeans(n_clusters= k, random_state=4, n_init=40)
@@ -44,11 +49,10 @@ def km_out(df,k,y):
     labels = km.labels_
     c_mat = c_mat_maker(labels)
     p_mat = pairwise_distances(df)
-    match =
     out_dict = {'huberts':huberts_gamma(p_mat,c_mat),
                 'norm':norm_gamma(p_mat, c_mat),
                 'tss': km.initertia_,
-                ''}
+                'match': acc(y,labels)}
     return(out_dict)
 
 
