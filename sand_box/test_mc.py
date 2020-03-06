@@ -30,16 +30,16 @@ def pca_trans(arr,seed):
     return(np.dot(gaus_arr.T,eig))
 
 
-test_df = make_classification(n_samples = 100,
-                     n_features= 50,
-                     n_informative = 48,
-                     n_redundant= 2,
-                     n_classes = 4,
-                     n_clusters_per_class = 1,
-                     class_sep= 2)
-td2 = test_df[0]
-td_rand = random_order(td2,4)
-td_minmax = min_max(td2,4)
-td_pca = pca_trans(td2,4)
+#test_df = make_classification(n_samples = 100,
+#                   n_features= 50,
+#                    n_informative = 48,
+#                    n_redundant= 2,
+#                    n_classes = 4,
+#                    n_clusters_per_class = 1,
+#                   class_sep= 2)
+#td2 = test_df[0]
+#td_rand = random_order(td2,4)
+#td_minmax = min_max(td2,4)
+#td_pca = pca_trans(td2,4)
 
 

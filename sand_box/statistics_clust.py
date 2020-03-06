@@ -2,22 +2,29 @@ from statistics import variance
 from sklearn.cluster import KMeans
 from sklearn.metrics import pairwise_distances
 from sklearn.metrics import confusion_matrix
+import numpy as np
+
 def huberts_gamma(p_mat,c_mat):
-    mat_sum = sum(p_mat[i,j] * c_mat[i,j] for i in range(len(p_mat)) for j in range(len(p_mat)) if j != i)
+    mat_sum = sum(p_mat[i,j] * c_mat[i,j] for i in range(len(p_mat)) for j in range(1,len(p_mat)) if j > i)
     m = (len(p_mat) * (len(p_mat) -1))/ 2
     return(mat_sum/m)
 
 # normalised gamma
 def norm_gamma(p_mat,c_mat):
-    p_var = np.var(p_mat)
-    c_var = np.var(c_mat)
-    p_mean = np.mean(p_mat)
-    c_mean = np.mean(c_mat)
     m = (len(p_mat) * (len(p_mat) - 1)) / 2
-    mat_sum = sum((p_mat[i, j] - p_var) * (c_mat[i, j] - c_var)
-                  for i in range(len(p_mat)) for j in range(len(p_mat))
-                  if j != i)
-    return((mat_sum/m)/(c_mean * p_mean))
+
+    p_mean = (sum(p_mat[i,j] for i in range(len(p_mat)) for j in range(1,len(p_mat)) if j > i))/m
+    c_mean = (sum(c_mat[i,j] for i in range(len(c_mat)) for j in range(1,len(c_mat)) if j > i))/m
+    p_var = ((sum(p_mat[i,j]**2 - p_mean**2
+                 for i in range(len(p_mat)) for j in range(1,len(p_mat))
+                 if j > i))/m)**(1/2)
+    c_var = ((sum(p_mat[i,j]**2 - p_mean**2
+                 for i in range(len(p_mat)) for j in range(1,len(p_mat))
+                 if j > i))/m)**(1/2)
+    mat_sum = sum((p_mat[i, j] - p_mean) * (c_mat[i, j] - c_mean)
+                  for i in range(len(p_mat)) for j in range(1,len(p_mat))
+                  if j > i)
+    return((mat_sum/m)/(c_var * p_var))
 
 
 # creation of c_mat
@@ -43,15 +50,14 @@ def acc(y_true,y_pred):
     correct = sum(1 for i in range(len(y_true)) if y_true[i] == y_pred2[i])/len(y_true)
     return(correct)
 
-def km_out(df,k,y):
+def km_out(df,k):
     km = KMeans(n_clusters= k, random_state=4, n_init=40)
     km = km.fit(df)
     labels = km.labels_
     c_mat = c_mat_maker(labels)
     p_mat = pairwise_distances(df)
-    out_dict = {'huberts':huberts_gamma(p_mat,c_mat),
-                'norm':norm_gamma(p_mat, c_mat),
-                'tss': km.initertia_,
-                'match': acc(y,labels)}
-    return(out_dict)
+    huberts = huberts_gamma(p_mat,c_mat)
+    norm = norm_gamma(p_mat, c_mat)
+    tss = km.inertia_
+    return([huberts,norm,tss])
 
