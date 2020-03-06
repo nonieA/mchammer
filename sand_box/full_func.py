@@ -22,14 +22,14 @@ def getscore(df,mc_method,reps = 1000,):
                                 og[i],
                                 get_p(results[i],og[i])] for i in range(len(methods))}
         return(out_dict)
-    return([one_k(data_list,i) for i in [2,3]])
+    return([one_k(data_list,i) for i in [2,3,4,5,6]])
 
 
 def full_func(df_in):
     df_lab = df_in[0]
     df = df_in[1]
     method_list = ['min_max','random_order','pca_trans']
-    out_dic = {str(i):getscore(df,i,reps = 10) for i in method_list}
+    out_dic = {str(i):getscore(df,i,reps = 500) for i in method_list}
     return([df_lab,out_dic])
 
 
