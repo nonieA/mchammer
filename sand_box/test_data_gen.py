@@ -17,16 +17,18 @@ split =[np.random.uniform(0,1/i,(i-1)) for i in k]
 
 # super nested lists
 
-def many_data(k,n,feat,noise,sep,split,seed):
+def many_data(k,n,feat,noise,sep,seed):
     np.random.seed(seed)
-    data = [make_classification(n_samples=num,
+    data = [['k ' + str(c) + ' n ' + str(num) + ' feat ' + str(f) + ' noise ' + str(noi) + ' sep ' + str(s),
+                make_classification(n_samples=num,
                          n_features=f,
                          n_informative=f - int(round(f * noi, 0)),
                          n_redundant=int(round(f * noi, 0)),
                          n_classes=c,
                          n_clusters_per_class=1,
-                         class_sep=s)
+                         class_sep=s)]
             for num in n for f in feat for noi in noise for c in k for s in sep]
+    data = [[i[0], i[1][0]] for i in data]
     return(data)
 
 
