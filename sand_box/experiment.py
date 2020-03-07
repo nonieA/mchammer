@@ -2,10 +2,13 @@ import multiprocessing as mp
 import full_func as ff
 import pandas as pd
 
-# todo change parameters in fullfunc before runnign
+
+# todo define input vars
+# todo run
+
 data_list = list(map(ff.full_func,test_data_list))
 
-test_df = data_list[0][1]['min_max'][0]
+
 def turn_df(point):
     df = pd.concat([pd.DataFrame(i) for i in data_list[0][1]['min_max']]).reset_index(drop = True).T
     def rename(x):
@@ -16,7 +19,6 @@ def turn_df(point):
     df = df.rename(rename,axis = 1)
     return(df)
 
-test2 = data_list[0][1]['min_max']
 
 def widen_df(impt):
     out = {k:turn_df(v) for k,v in impt.items()}
@@ -31,8 +33,10 @@ def widen2(impt):
     return(out)
 
 test = widen2(data_list)
-
-
-[print(i) for i in impt.items()]
-
+test = test.reset_index()
+test_split = test.df_type.str.split(' ')
+col_names = ['drop1','k','drop2','n','drop3','feat','drop4','noise','drop6','sep']
+test_split = pd.DataFrame(test_split.tolist(),columns = col_names)
+test_final = pd.concat([test,test_split], axis = 1).drop(['df_type','drop1','drop2','drop3','drop4','drop6'], axis = 1)
+test_final.to_csv('out_data.csv')
 

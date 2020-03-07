@@ -30,6 +30,7 @@ def full_func(df_in):
     df = df_in[1]
     method_list = ['min_max','random_order','pca_trans']
     out_dic = {str(i):getscore(df,i,reps = 500) for i in method_list}
+    print(df_lab + ' done')
     return([df_lab,out_dic])
 
 
