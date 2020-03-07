@@ -1,12 +1,21 @@
 import multiprocessing as mp
 import full_func as ff
 import pandas as pd
-
+import test_data_gen as tdg
 
 # todo define input vars
 # todo run
+k = [2,4,5]
+n = [100]
+feat = [10]
+noise = [0,0.1,0.5]
+sep = [0.5,1,3]
 
-data_list = list(map(ff.full_func,test_data_list))
+exp_list = tdg.many_data(k = k,n=n,feat = feat,noise = noise,sep = sep,seed =4)
+
+
+
+data_list = list(map(ff.full_func, exp_list))
 
 
 def turn_df(point):
