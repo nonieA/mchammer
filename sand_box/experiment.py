@@ -7,7 +7,7 @@ import test_data_gen as tdg
 # todo run
 k = [2,4,5]
 n = [100]
-feat = [10]
+feat = [10,20]
 noise = [0,0.1,0.5]
 sep = [0.5,1,3]
 
@@ -19,7 +19,7 @@ data_list = list(map(ff.full_func, exp_list))
 
 
 def turn_df(point):
-    df = pd.concat([pd.DataFrame(i) for i in data_list[0][1]['min_max']]).reset_index(drop = True).T
+    df = pd.concat([pd.DataFrame(i) for i in point]).reset_index(drop = True).T
     def rename(x):
         name_list = {'0':'mean','1':'var','2':'og_var','3':'p_val'}
         clust = str(int(x/4 + 2))
@@ -47,5 +47,5 @@ test_split = test.df_type.str.split(' ')
 col_names = ['drop1','k','drop2','n','drop3','feat','drop4','noise','drop6','sep']
 test_split = pd.DataFrame(test_split.tolist(),columns = col_names)
 test_final = pd.concat([test,test_split], axis = 1).drop(['df_type','drop1','drop2','drop3','drop4','drop6'], axis = 1)
-test_final.to_csv('out_data.csv')
+test_final.to_csv('out_data2.csv')
 
