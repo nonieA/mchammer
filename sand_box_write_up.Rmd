@@ -4,7 +4,7 @@ title: Monte Carlo Health Attuned Multiple Metrics Evaluation Rubric - prelimina
 author: "Nonie"
 date: "09/03/2020"
 output:
-  pdf_document: default
+  word_document: default
   html_document: default
 ---
 
@@ -20,36 +20,164 @@ library(reshape2)
 library(gridExtra)
 library(lattice)
 library(wesanderson)
+library(extrafont)
 td_small <- fread('./tp_small.csv', drop = 1)
 td_out <- fread('./tp_out.csv')
 td_acc <- fread('./tp_acc.csv')
 td_pos <- fread('./tp_pos.csv',drop = 1)
 td_acru <- fread('./tp_acru.csv',drop = 1)
 tp_fin <- fread('./tp_fin.csv', drop = 1)
+cols <- c('#453a49','#541388','#d90368','#197278','#c3a995')
+grad_cols <- c('#197278', '#776874', '#936473', '#a46375', '#af6476', '#b86878', '#bf6c7b', '#c3727e', '#c77980', '#c98084', '#c98887', '#c9908a', '#c8988e', '#c6a091', '#c3a995')
 ```
 ## Introduction 
-Clusters can be evaluated by comparing their distribution to that of a null distribution, however several 
-parameters in that need to be tested first, for example what statistic to compare the original data set
-and the null distribution generation. Below we start the initial testing of those parameters on 
-simple known cluster data sets. 
+
+### Overview
+There exist many tools to evaluate clusters resulting from patient subtyping studies, however 
+the question is never asked whether the data being clustered actually contains clusters. This 
+is an important question as many commenly used clustering methods such as k-means will find 
+clusters independent of any cluster structure existing. A method proposed in Pattern Recognition
+uses a hypothesis test to test for cluster structure by using a monte carlo simulation of null 
+distribution, based on multiple generated data sets which are known to have no underlying cluster 
+structure with the parameters of the original data set. 
+It compares cluster statistic Q (any appropriate cluster statistic) from the original data set to 
+the results of the Q statistic from the monte carlo generated null distribution, and if it is 
+above (or below) a pre determined cut off it is determined to have a clustered structure. This 
+method could also be used to determine number of clusters.
+
+
+### Previous Research 
+As mentioned above this method is a development of a method outlined in the book Pattern 
+Recognition. It has been used in practice in the methods SigClust and M3C 
+
+#### Pattern Recognition 
+
+The method outlined in Pattern Recognition is based on the 
+principle of hypothesis testing, in that you can test if data set $X$ 
+has cluster structure through testing the following null and alternate hypothesis
+
+__H1__ The data set $X$ does have a cluster structure 
+
+__H0__ The data set $X$ has no cluster structure 
+
+To perform this $X$ has to be compared to a range of data sets which 
+we know has no cluster structure to either reject or accept the null hypothesis. 
+Monte Carlo simulations which generates randomly dispersed data, known as 'reference data sets'.
+These are used to generate the null distribution used to compare the original data to based on 
+cluster statistic $Q$. 
+
+The steps involved in the process outlined in Pattern Recognition are outlined below 
+and in figure 1. 
+
+1. Generate n number of reference data sets $R$ based on parameters of orignal data set $X$ 
+2. Apply a clustering method to $X$ and $R$ 
+3. Find the cluster statistic $Q$ for $X$ and $R$ to return $Q_X$ and the set of statistics $Q_R$ 
+4. Compare cluster statistc $Q_X$ to set $Q_R$, if it above (or below depending on the nature of $Q$) cut off $p$
+the null hypothesis is rejected. If it is the reverse the null hypothesis is accepted. 
+
+It also outlines ways to carry out different parts of the method as follows: 
+
+1. __Generation of data with random distribution__. It states for ratio data that you are testing 
+whether the points in $X$ have a random position in hypercube $H_l$ which has $l$ dimentions
+where the bounds of those dimentions are the minimum nad maximum value of each varible in $X$. 
+
+To get a random data points should be generated from a uniform distribution in hyoercube $H_1$. 
+
+2. __Cluster Statistic Q__. For non-hierachical concrete (not fuzzy) clustering problems it 
+suggests the huberts gamma statistic.
+
+#### Monte Carlo Concensus Clustering (M3C)
+
+__Aim__ M3C uses the monte carlo method outlined above to identify cluster number and detect 
+clusters in genome data when using consensus clustering. Consensus clustering is a clustering 
+method which is based on stability. It clusters bootstrapped samples of the original data, records 
+the frequency of when each point occurs in the same cluster as each other point and then uses the 
+resulting matrix as a basis of a dissimilarity matrix for clustering. Senbabaofgly found that this method 
+finds clusters in null data sets. They use Proportion of ambiguos pairs (PAC) statistic compared to 
+a null distribution to identify the best value of K. However the PAC statistic favours higher values 
+of K, so M3C aims to eliminate that bias by turning the comparison to a null distribution into a formal
+hypothesis test. 
+
+__Method__ 
+
+1. __Reference Data Set Genertation__. M3C use PCA to extract the eigen vectors of $X$ which are then 
+multiplied by a randomly generated dataset from a gaussian distribution 
+2. __Cluster Statistic $Q$__. M3C use PAC statistic 
+3. __Calculating P value__. M3C uses the following equation to calculate the p value within the bounds 
+of the Monte carlo experiment, where $O_k$ is the number of PAC scores in the reference population less than 
+or equal to the PAC score of $X$ and $B$ is the total number of simulations. 1 is added to the numerator and 
+demonitator so as not to get a p value of 0. 
+
+
+$$P_K=\frac{O_k + 1}{B+1}$$ 
+4. __Calculating P Values Beyond the Monte Carlo Experiment__. M3C fits a beta distribution 
+to estimate the p value beyond the ranges of the monte carlo experiment (which has finate number
+of simulations). This is because especialy when K = 2, the PAC distribution has a non-normal 
+skew and kurtosis. 
+5. __Cluster Methods__. M3C uses consencus clustering 
+
+__Tests and Results__ 
+
+1. MC3 compared monte carlo p values with reletive cluster stability index and the real PAC statistic
+in two different tests
+    + Negative Control (no clusters) simulated data -> was not significant 
+    + Positive Control (4 clusters) simulated data -> Significant, all methods found 4 clusters 
+
+    
+2. The method was then run on 7 previously clustered datasets to compare results with the method
+they used to identify K 
+    + They found 2 data sets that did not have cluster structure in the data
+
+3. Running on simulated data with controlled seperation between the data sets
+    + M3C using RCSI was found to be the most accurate method 
+    + M3C performs equally well compared to others with clusters of low seperation 
+
+__Limitations__
+
+1. M3C does not provide a statistical test for identifying cluster number only comparison 
+to null distribution 
+
+2. M3C only looks at consencus clustering and stability 
+
+This method seperates itself from M3C by looking at cluster structure rather than 
+stability and being targetted for use on EHR rather than genomics data. 
+
+
+### Aims 
+This is a preliminary investigation to determine the best way to cary out the method. 
+These include: 
+
+- Best method for generating a null distribution
+- Best statistic for Q 
+
+They have been evaluated by their ability to identify the true number of clusters from 
+generated data sets with a known number of clusters with a varied amount of seperation 
+between clusters and noise variable
+
 
 ## Method 
 ### Null Distribution
-Three methods were chosen to create null distributions from the data
+Three methods were chosen to create null distributions from the original data
+![Alt text](./sand_box/test_dists_pics/td2.png)
 
 1. __Shuffle the data__
 takes all the original data points and shuffles the order in the
 variables to remove correlation between the variables
+![Alt text](./sand_box/test_dists_pics/td_rand.png)
 
 2. __Max Min Uniform Distribution__
 is generated from a uniform distribution between the minumum and
 maximum values of the variable
+
+![Alt text](./sand_box/test_dists_pics/td_minmax.png)
 
 3. __PCA Distribution__
 takes the eigan vectures of the data set are gained through PCA, these are
 then used to transform a random data set generated from a  single
 gaussian distribution. The resulting data set is one with only one
 cluster yet maintains the relationships between the variables
+
+![Alt text](./sand_box/test_dists_pics/td_pca.png)
 
 To create a null distribution, 500 test data sets were generated
 
@@ -60,17 +188,19 @@ Three Seperation metrics are used:
 is a measure of how much the high distances
 between variables correlates with cluster membership. It uses 2 matrices
 the distance matrix which was the basis of clustering (D) and a matrix
-recording cluster membership  where the value at point (i,j) is 1 if
+recording cluster membership where the value at point (i,j) is 1 if
 they are from different clusters and 0 if they are from the same.
-The statistic = the sum of D(i,j) * C(i,j) for i in 1-n and j in 2 -n /
-the number of point pairs. The higher the value the better cluster
-structure
+The statistic is shown in the equation below, where M is the number of 
+pairs, N is the number of observations amd D and C are the matrices 
+mentioned above.
+
+$$\Gamma=\frac{1}{M}\sum_{i=1}^{N-1}\sum_{j=i+1}^{N} D(i,j) C(i,j)$$
 
 2. __Normalised Gamma Statistic__
-is the normalised version of the statistic above. The statistic =
-(the sum of D(i,j)-mean(D) * C(i,j)- mean(C) for i in 1-n and j in 2 -n /
-the number of point pairs)/var(D)*var(C). This returns a value between
-0 and 1 with high being more clustered
+is the normalised version of the statistic above. The normalised statistic 
+is shown below where $\mu$ is the mean and $\theta$ is the variance 
+
+$$\hat\Gamma=\frac{\frac{1}{M}\sum_{i=1}^{N-1}\sum_{j=i+1}^{N} \left( D(i,j)-\mu_d\right)(C(i,j)-\mu_c )}{\theta_d\theta_c}$$
 
 3. __Total Within Cluster Sum of Squares__
 is the sum of the distances from each point to its assigned cluster
@@ -103,15 +233,15 @@ and the three cluster seperation metrics were returned, for k = 2-6
 4. The mean and standard deviation is returned for each null distribution
 method, for each seperation metric and for each cluster number
 5. The seperation metric score and p value for the original data set
-is returned for each null distribution
-method, for each seperation metric and for each cluster number
+is returned for each null distribution method, for each seperation 
+metric and for each cluster number
 
 ### Experiment Outcomes
 
 Each distribution method and Cluster metric will by the accuracy of 
 identifying the correct cluster number 
 
-##Results 
+
 
 ```{r plots, echo = FALSE}
  
@@ -124,7 +254,7 @@ tp_bar <- ggplot(data = td_sense, aes(x = both, y = value, fill = type)) +
     geom_text(data = td_sense %>% filter(type == 'fn'), aes(label = Sense), y = 30) + 
     labs(title = 'Method Sensitivity', x = 'Method', y = '') +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-    scale_fill_discrete(name = "", labels = c("False Negative", "True Positive"))
+    scale_fill_manual(name = "", labels = c("False Negative", "True Positive"), values = cols)
     
     
 tp_fin2 <- tp_fin %>% mutate_all(factor)
@@ -133,13 +263,13 @@ tp_fin2$sep <- factor(tp_fin2$sep, levels(tp_fin2$sep)[c(3,2,1)])
 success_wrap = ggplot(tp_fin2, aes(noise, sep,fill = only)) + geom_tile()+ theme_minimal()
 success_wrap = success_wrap + facet_grid(mc_type ~ index) + 
   labs(title = 'Correctly Identified Cluster Numbers per Method', x = 'Noise Ratio', y = 'Seperation') + 
-  scale_fill_discrete(name = ' Number\n Identified')
+  scale_fill_manual(name = ' Number\n Identified',values = cols)
 
 
 sums_wrap <- ggplot(tp_fin2, aes(noise, sep,fill = Sums)) + geom_tile()+ theme_minimal()
 sums_wrap = sums_wrap + facet_grid(mc_type ~ index) + 
   labs(title = 'Total Identified Cluster Numbers per Method', x = 'Noise Ratio', y = 'Seperation') + 
-  scale_fill_discrete(name = ' Number\n Identified')
+  scale_fill_manual(name = ' Number\n Identified', values = grad_cols)
 
 lower_4 <- function(x){
    thing <- quantile(x)
@@ -162,9 +292,10 @@ tp_km$Total <- factor(tp_km$Total)
   
 km_plot <- ggplot(tp_km, aes(x = Total2, y = mean, fill = index)) + 
   geom_bar(stat = 'identity', position = 'dodge') +
-  geom_errorbar(aes(ymin = lower, ymax = upper), position = position_dodge(0.9),width = .1, color = 'dark grey')+ 
+  geom_errorbar(aes(ymin = lower, ymax = upper), position = position_dodge(0.9),width = .1, color = 'dark grey')+
   theme_minimal()+ 
-  labs(title = 'K Means Accuracy per Method Accuracy', x = 'Cluster Number Discovered', y = 'K Means Accuracy')
+  labs(title = 'K Means Accuracy per Method Accuracy', x = 'Cluster Number Discovered', y = 'K Means Accuracy')+
+  scale_fill_manual(values = cols)
 ```
 
 # Results 
