@@ -6,6 +6,8 @@ date: "09/03/2020"
 output:
   word_document: default
   html_document: default
+  fig_caption: yes
+bibleography: My_Collection.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -19,26 +21,26 @@ library(ggplot2)
 library(reshape2)
 library(gridExtra)
 library(lattice)
-library(wesanderson)
 library(extrafont)
-td_small <- fread('./tp_small.csv', drop = 1)
-td_out <- fread('./tp_out.csv')
-td_acc <- fread('./tp_acc.csv')
-td_pos <- fread('./tp_pos.csv',drop = 1)
-td_acru <- fread('./tp_acru.csv',drop = 1)
-tp_fin <- fread('./tp_fin.csv', drop = 1)
+library(stringr)
+tp_sense <- fread('./sand_box/out_data/sense_final.csv', drop = 1)
+tp_only <- fread('./sand_box/out_data/only.csv', drop = 1)
+tp_pval <- fread('./sand_box/out_data/pval.csv', drop = 1)
+tp_clust <- fread('./sand_box/out_data/clust.csv', drop = 1)
+tp_acru <- fread('./sand_box/out_data/tp_acru.csv', drop = 1)
+tp_count <- fread('./sand_box/out_data/count.csv', drop = 1)
 cols <- c('#453a49','#541388','#d90368','#197278','#c3a995')
-grad_cols <- c('#197278', '#776874', '#936473', '#a46375', '#af6476', '#b86878', '#bf6c7b', '#c3727e', '#c77980', '#c98084', '#c98887', '#c9908a', '#c8988e', '#c6a091', '#c3a995')
+grad_cols <- c('#453a49','#541388', '#601286', '#6b1284', '#751482', '#7e1681', '#86197f', '#8e1c7e', '#95217d', '#9b267d', '#a12b7c', '#a7307c', '#ac367b', '#b13c7b', '#b5427c', '#b9487c', '#bd4e7d', '#c0557d', '#c35c7e', '#c5627f', '#c76980', '#c97082', '#ca7784', '#ca7e85', '#ca8588', '#ca8c8a', '#c9938c', '#c89a8f', '#c6a292', '#c3a995')
 ```
 ## Introduction 
 
 ### Overview
 There exist many tools to evaluate clusters resulting from patient subtyping studies, however 
 the question is never asked whether the data being clustered actually contains clusters. This 
-is an important question as many commenly used clustering methods such as k-means will find 
-clusters independent of any cluster structure existing. A method proposed in Pattern Recognition
-uses a hypothesis test to test for cluster structure by using a monte carlo simulation of null 
-distribution, based on multiple generated data sets which are known to have no underlying cluster 
+is an important question as many commenly used clustering methods such as k-means will find
+clusters independent of any cluster structure existing. A method proposed in Pattern Recognition [@theodoridis2003konstantinos]
+uses a hypothesis test to test for cluster structure by using a monte carlo simulation creating a null 
+reference distribution, based on multiple generated data sets which are known to have no underlying cluster 
 structure with the parameters of the original data set. 
 It compares cluster statistic Q (any appropriate cluster statistic) from the original data set to 
 the results of the Q statistic from the monte carlo generated null distribution, and if it is 
@@ -48,7 +50,7 @@ method could also be used to determine number of clusters.
 
 ### Previous Research 
 As mentioned above this method is a development of a method outlined in the book Pattern 
-Recognition. It has been used in practice in the methods SigClust and M3C 
+Recognition. It has been used in practice in the method M3C [-@john2020]
 
 #### Pattern Recognition 
 
@@ -66,7 +68,7 @@ Monte Carlo simulations which generates randomly dispersed data, known as 'refer
 These are used to generate the null distribution used to compare the original data to based on 
 cluster statistic $Q$. 
 
-The steps involved in the process outlined in Pattern Recognition are outlined below 
+The steps involved in the process outlined in Pattern Recognition are below 
 and in figure 1. 
 
 1. Generate n number of reference data sets $R$ based on parameters of orignal data set $X$ 
@@ -77,14 +79,16 @@ the null hypothesis is rejected. If it is the reverse the null hypothesis is acc
 
 It also outlines ways to carry out different parts of the method as follows: 
 
-1. __Generation of data with random distribution__. It states for ratio data that you are testing 
-whether the points in $X$ have a random position in hypercube $H_l$ which has $l$ dimentions
-where the bounds of those dimentions are the minimum nad maximum value of each varible in $X$. 
+1. __Generation of data with random distribution__. It states for ratio data that what is being tested is 
+whether the points in $X$ have a random position in hypercube $H_l$ which has $l$ dimensions
+where the bounds of those dimensions are the minimum nad maximum value of each varible in $X$. 
 
-To get a random data points should be generated from a uniform distribution in hyoercube $H_1$. 
+To get the random data, points should be generated from a uniform distribution in hypercube $H_1$. 
 
 2. __Cluster Statistic Q__. For non-hierachical concrete (not fuzzy) clustering problems it 
 suggests the huberts gamma statistic.
+
+![Figure 1: Method outlined in Pattern Recognition for Monte Carlo Method of Cluster Recognition](./sand_box/test_dists_pics/thesis_poster.jpg)
 
 #### Monte Carlo Concensus Clustering (M3C)
 
@@ -92,11 +96,11 @@ __Aim__ M3C uses the monte carlo method outlined above to identify cluster numbe
 clusters in genome data when using consensus clustering. Consensus clustering is a clustering 
 method which is based on stability. It clusters bootstrapped samples of the original data, records 
 the frequency of when each point occurs in the same cluster as each other point and then uses the 
-resulting matrix as a basis of a dissimilarity matrix for clustering. Senbabaofgly found that this method 
-finds clusters in null data sets. They use Proportion of ambiguos pairs (PAC) statistic compared to 
-a null distribution to identify the best value of K. However the PAC statistic favours higher values 
-of K, so M3C aims to eliminate that bias by turning the comparison to a null distribution into a formal
-hypothesis test. 
+resulting matrix as a basis of a dissimilarity matrix for clustering. Senbabaofgly [ -@șenbabaouglu2014] 
+found that this method finds clusters in null data sets. They use Proportion of ambiguos pairs (PAC) 
+statistic compared to a null distribution to identify the best value of K. However the PAC statistic 
+favours higher values of K, so M3C aims to eliminate that bias by turning the comparison to a null 
+distribution into a formal hypothesis test. 
 
 __Method__ 
 
@@ -110,11 +114,12 @@ demonitator so as not to get a p value of 0.
 
 
 $$P_K=\frac{O_k + 1}{B+1}$$ 
+
 4. __Calculating P Values Beyond the Monte Carlo Experiment__. M3C fits a beta distribution 
 to estimate the p value beyond the ranges of the monte carlo experiment (which has finate number
-of simulations). This is because especialy when K = 2, the PAC distribution has a non-normal 
-skew and kurtosis. 
-5. __Cluster Methods__. M3C uses consencus clustering 
+of simulations). This is chosen over a normal distribution because especialy when K = 2, 
+the PAC distribution has a non-normal skew and kurtosis. 
+5. __Cluster Methods__. M3C uses consencus clustering. 
 
 __Tests and Results__ 
 
@@ -158,26 +163,28 @@ between clusters and noise variable
 ## Method 
 ### Null Distribution
 Three methods were chosen to create null distributions from the original data
-![Alt text](./sand_box/test_dists_pics/td2.png)
 
-1. __Shuffle the data__
+![Figure 2: Original data (k = 2, 2 dimentions)](./sand_box/test_dists_pics/td2.png)
+
+1. __Random Shuffle of the Data__
 takes all the original data points and shuffles the order in the
 variables to remove correlation between the variables
-![Alt text](./sand_box/test_dists_pics/td_rand.png)
+
+![Figure 3: Results from random shuffle of data](./sand_box/test_dists_pics/td_rand.png)
 
 2. __Max Min Uniform Distribution__
 is generated from a uniform distribution between the minumum and
 maximum values of the variable
 
-![Alt text](./sand_box/test_dists_pics/td_minmax.png)
+![Figure 4: Results from Min max method applied to data](./sand_box/test_dists_pics/td_minmax.png)
 
 3. __PCA Distribution__
 takes the eigan vectures of the data set are gained through PCA, these are
-then used to transform a random data set generated from a  single
+then used to transform a random data set generated from a single
 gaussian distribution. The resulting data set is one with only one
 cluster yet maintains the relationships between the variables
 
-![Alt text](./sand_box/test_dists_pics/td_pca.png)
+![Figure 5: Results from PCA method applied to data](./sand_box/test_dists_pics/td_pca.png)
 
 To create a null distribution, 500 test data sets were generated
 
@@ -203,7 +210,7 @@ is shown below where $\mu$ is the mean and $\theta$ is the variance
 $$\hat\Gamma=\frac{\frac{1}{M}\sum_{i=1}^{N-1}\sum_{j=i+1}^{N} \left( D(i,j)-\mu_d\right)(C(i,j)-\mu_c )}{\theta_d\theta_c}$$
 
 3. __Total Within Cluster Sum of Squares__
-is the sum of the distances from each point to its assigned cluster
+(TSS) is the sum of the distances from each point to its assigned cluster
 center, the smaller the distance the better.
 
 ### Cluster Methodology
@@ -227,7 +234,7 @@ This resulted in 54 distinct data sets.
 
 1. 54 Datasets were created
 2. For each data set 500 null distributions were made with each null
-distribution method (total 1500 null distributions
+distribution method (total 1500 null distributions)
 3. K-means was run on the original data set and 1500 null datasets
 and the three cluster seperation metrics were returned, for k = 2-6
 4. The mean and standard deviation is returned for each null distribution
@@ -238,38 +245,77 @@ metric and for each cluster number
 
 ### Experiment Outcomes
 
-Each distribution method and Cluster metric will by the accuracy of 
+Each distribution method and Cluster metric will be evaluated by the accuracy of 
 identifying the correct cluster number 
 
 
 
 ```{r plots, echo = FALSE}
- 
-td_sense <- td_small %>% select('both','Sense','tp','fn') %>% gather(key = 'type', value = 'value', tp,fn)%>% 
-  mutate(Sense = round(Sense,2))
-td_spec <- td_small %>% select('both','Spec','tn','fp') %>% gather(key = 'type', value = 'value', tn,fp)
-tp_bar <- ggplot(data = td_sense, aes(x = both, y = value, fill = type)) + 
+tp_sense <- tp_sense %>% 
+  mutate(sense = round(sense,2),
+         index = case_when(index %in% 'hubers' ~ 'Huberts Gamma Statistic',
+                           index %in% 'norm' ~ 'Normalised Gamma Statistic',
+                           index %in% 'tss' ~ 'TSS'),
+         mc_type = case_when(mc_type %in% 'pca_trans' ~ 'PCA',
+                             mc_type %in% 'random_order' ~ 'Random Shuffle',
+                             mc_type %in% 'min_max' ~ 'Min Max'))%>% 
+  select(index,mc_type,fn,tp,sense) %>%
+  reshape2::melt(id.vars = c('index','mc_type','sense'))%>% 
+  mutate(variable = factor(variable),
+         x = paste0(index,' ',mc_type))
+
+tp_bar <- ggplot(data = tp_sense, aes(x = x, y = value, fill = variable)) + 
     geom_bar(stat = 'identity', position = 'identity', alpha = .5) + 
     theme_minimal()+ 
-    geom_text(data = td_sense %>% filter(type == 'fn'), aes(label = Sense), y = 30) + 
+    geom_text(data = tp_sense %>% filter(variable == 'fn'), aes(label = sense), y = 30) + 
     labs(title = 'Method Sensitivity', x = 'Method', y = '') +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+    scale_x_discrete(labels = function(x) str_wrap(x, width = 18)) +
     scale_fill_manual(name = "", labels = c("False Negative", "True Positive"), values = cols)
+       
     
-    
-tp_fin2 <- tp_fin %>% mutate_all(factor)
+tp_fin2 <- tp_only %>% mutate(
+         index = case_when(index %in% 'hubers' ~ 'Huberts Gamma Statistic',
+                           index %in% 'norm' ~ 'Normalised Gamma Statistic',
+                           index %in% 'tss' ~ 'TSS'),
+         mc_type = case_when(mc_type %in% 'pca_trans' ~ 'PCA',
+                             mc_type %in% 'random_order' ~ 'Random Shuffle',
+                             mc_type %in% 'min_max' ~ 'Min Max')) %>%
+  mutate_all(factor)
 tp_fin2$sep <- factor(tp_fin2$sep, levels(tp_fin2$sep)[c(3,2,1)])
 
-success_wrap = ggplot(tp_fin2, aes(noise, sep,fill = only)) + geom_tile()+ theme_minimal()
+success_wrap = ggplot(tp_fin2, aes(noise, sep,fill = count)) + geom_tile()+ theme_minimal()
 success_wrap = success_wrap + facet_grid(mc_type ~ index) + 
   labs(title = 'Correctly Identified Cluster Numbers per Method', x = 'Noise Ratio', y = 'Seperation') + 
-  scale_fill_manual(name = ' Number\n Identified',values = cols)
+  scale_fill_manual(name = 'Number/nof Correct/nValue of K/nIdentified',values = grad_cols[c(1,2,5,10,15,20,25)])
 
+tp_count = tp_count %>% mutate(
+         index = case_when(index %in% 'hubers' ~ 'Huberts Gamma Statistic',
+                           index %in% 'norm' ~ 'Normalised Gamma Statistic',
+                           index %in% 'tss' ~ 'TSS'),
+         mc_type = case_when(mc_type %in% 'pca_trans' ~ 'PCA',
+                             mc_type %in% 'random_order' ~ 'Random Shuffle',
+                             mc_type %in% 'min_max' ~ 'Min Max')) %>% mutate_all(factor)
+tp_count$sep <- factor(tp_count$sep, levels(tp_count$sep)[c(3,2,1)])
 
-sums_wrap <- ggplot(tp_fin2, aes(noise, sep,fill = Sums)) + geom_tile()+ theme_minimal()
+sums_wrap <- ggplot(tp_count, aes(noise, sep,fill = sums)) + geom_tile()+ theme_minimal()
 sums_wrap = sums_wrap + facet_grid(mc_type ~ index) + 
-  labs(title = 'Total Identified Cluster Numbers per Method', x = 'Noise Ratio', y = 'Seperation') + 
-  scale_fill_manual(name = ' Number\n Identified', values = grad_cols)
+  labs(title = 'Total Identified Cluster Numbers per Method', x = 'Noise Ratio', y = 'Seperation') +
+  scale_fill_manual(name = 'Number/nof Total/nValue of K/nIdentified', values = grad_cols)
+
+tp_pval = tp_pval %>% mutate(
+         index = case_when(index %in% 'hubers' ~ 'Huberts Gamma Statistic',
+                           index %in% 'norm' ~ 'Normalised Gamma Statistic',
+                           index %in% 'tss' ~ 'TSS'),
+         mc_type = case_when(mc_type %in% 'pca_trans' ~ 'PCA',
+                             mc_type %in% 'random_order' ~ 'Random Shuffle',
+                             mc_type %in% 'min_max' ~ 'Min Max')) %>%mutate_all(factor)
+tp_pval$sep <- factor(tp_pval$sep, levels(tp_pval$sep)[c(3,2,1)])
+pval_wrap <- ggplot(tp_pval, aes(noise, sep,fill = Cor)) + geom_tile()+ theme_minimal()
+pval_wrap = pval_wrap + facet_grid(mc_type ~ index) + 
+  labs(title = 'Correct Cluster Number Predicted by Lowest p Value', x = 'Noise Ratio', y = 'Seperation')+
+  scale_fill_manual(name = 'Number/nof Correct/nValue of K/nIdentified', values = grad_cols[c(1,2,5,10,15,20,25)])
+  
 
 lower_4 <- function(x){
    thing <- quantile(x)
@@ -280,82 +326,105 @@ upper_4 <- function(x){
    thing <- quantile(x)
    return(unname(thing[4]))
 }
-
-tp_km <- td_acru %>% 
-  mutate(Total = replace_na(Total, 0)) %>% 
+ 
+tp_km <- tp_acru %>% 
+  mutate(Total = replace_na(Total, 0),
+         index = case_when(index %in% 'hubers' ~ 'Huberts Gamma Statistic',
+                           index %in% 'norm' ~ 'Normalised Gamma Statistic',
+                           index %in% 'tss' ~ 'TSS')) %>% 
   group_by(Total,index) %>% 
   summarise(mean = mean(acru),lower = lower_4(acru), upper = upper_4(acru))%>% 
   mutate(Total2 = ifelse(Total == '1','Yes','No'))
 
 tp_km$Total <- factor(tp_km$Total)  
 
-  
+
 km_plot <- ggplot(tp_km, aes(x = Total2, y = mean, fill = index)) + 
   geom_bar(stat = 'identity', position = 'dodge') +
   geom_errorbar(aes(ymin = lower, ymax = upper), position = position_dodge(0.9),width = .1, color = 'dark grey')+
   theme_minimal()+ 
   labs(title = 'K Means Accuracy per Method Accuracy', x = 'Cluster Number Discovered', y = 'K Means Accuracy')+
   scale_fill_manual(values = cols)
+
+
 ```
 
 # Results 
 
-Figure 1 shows the senstivity for each metric, null distribution combination. The 
-first thing to note is that using the within sum of squares was unsuccsesfull 
-no matter what the distribution method used. The best method used was the combination 
-of random order generation and huberts gamma statistic with a sensitivity of .5 which 
-is still pretty bad. Overall out of the data genration methods random order performed 
-the best, follewed by pca then lastly min max. 
+Figure 6 shows the senstivity for each metric, null distribution method pairing. Here it shows that 
+with a sensitivity of 1 that TSS both with min max method and the random shuffle method performed the best
+and the huberts gamma statistic min max performed the worst with a sensitivity of 0. However using sensitivity is 
+disingenious as if the method thought there were clusters at every k tried (so the returning values
+were either true positives or false positives) it would return a sensitivity of 1. To combat this 
+we looked at when each method metric pair found only the correct cluster number and not identifying 
+any other cluster number. 
 
 
-```{r figure 1,echo = F}
+```{r figure 6,echo = F, fig.cap='Figure 6: Sensitivity of each method metric pairing'}
 plot(tp_bar)
 
 ```
 
-Figure 2 shows how many times each method distribution pairing identified the correct
+Figure 7 shows how many times each method distribution pairing identified the correct
 cluster number and did not identify any other cluster number as significant, broken 
-down by seperation and ratio of noise varabibles (max 3). As the ratio of noise variables 
+down by seperation and ratio of noise varabibles (max 6). As the ratio of noise variables 
 increasesand the seperation value decreases (top right of each figure) the clustering 
 problem gets harder. 
 
-```{r figure 2,echo = F}
+```{r figure 7,echo = F, fig.cap='Figure 7: Number of times where only the correct K was found to be significant, for each metric, method, seperation, and noise ratio'  }
 plot(success_wrap)
 
 ```
 
-Figure 2 shows huberts gamma statistic performs better than the other 2 metrics and 
-shows a split between random order being better at identifying the harder cluster
-problems  with smaller seperation, and pca better at solving the easier ones. This 
+Figure 7 shows huberts gamma statistic performs better than the other 2 metrics and 
+shows a split between random shuffle being better at identifying the harder cluster
+problems  with smaller seperation, and PCA better at solving the easier ones. This 
 could be because if there a large seperation in the data already there will also 
 be in the null distribution as it only uses the values that exist. 
 
-Figure 3 shows how many times the method, distributer pairing thought there were 
-clusters there (for k = 2 -6). What it shows is within cluster sum of squares unable 
-to desern between clustered and null distributions whatsoever, however the issue 
-with hubers random order and norm min max seem that it is finds clusters when they
-are not there. 
+Figure 8 shows the total number of times each method, metric pairing identified 
+a cluster (whether it was the true number or not). For each method metric pair for each 
+seperation and noise values there are 30 tests (with only 6 correct in each). Here we can see that the reason
+for the sensitivity score from TSS and min max, and TSS and random shuffle are due
+to those methods identifying clusters in all or nearly all of cases. 
 
-
-```{r figure 3, echo = F}
+```{r figure 8, echo = F, fig.cap='Figure 8: Total number of times any value of K was found to be significant , for each metric, method, seperation, and noise ratio'}
 plot(sums_wrap)
 
 ```
+
+In the M3C paper they picked the cluster number with the lowest pvalue and the cluster
+identified, these results are shown in figure 9 
+
+```{r figure 9, echo = F, fig.cap='Figure 9: Number of times where the correct K was found to be significant and the lowest p value, for each metric, method, seperation, and noise ratio'}
+
+plot(pval_wrap)
+```
+
+PCA and Huberts statistic performs the best but only with high seperation, overall random order
+performs the best. 
+
 One potential reason for the methods not finding hte correct cluster number is 
 that k-means did a terrible job of identifying the clusters, so we compared 
 the mean matching score between the k means cluster labels and the original cluster. 
-This is shown in figure 4. It appears from this plot that k-means is partly responsible
+This is shown in figure 10. It appears from this plot that k-means is partly responsible
 for not being able to identify the correct cluster number 
 
 
-```{r figure 4, echo = F}
+```{r figure 10, echo = F, fig.cap= 'Figure 10: Mean accuracy of k-means for when the correct method was identified, split by monte carlo method, range bars showing inter quartile range'}
 plot(km_plot)
 
 ```
 
+# Key findings 
+
+Overall Huberts gamma statistic in conjuction with random shuffle performed the best. TSS performed badly as did min max. 
+However the results were overwhelmingly poor but this is partially due to inaccuracy of K-Means.
+
+
 # Going Forward 
 
 1. Use PCA before K-means with greater number of random starts to improve performance 
-2. Test more cluster metrics (drop tss)
-3. Return metrics on the distributions namely kertosis 
+2. Return metrics on the distributions namely kertosis 
+3. Test against negetive control 
 
