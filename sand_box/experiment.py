@@ -56,4 +56,19 @@ test_final.to_csv('out_data2.csv')
 
 # Negative control
 
+k = [1]
+n = [100]
+feat = [10]
+noise = [0]
+sep = [0]
+seed = list(range(35))
+
+
+
+null_list = tdg.many_data(k = k,n=n,feat = feat,noise = noise,sep = sep,seed =seed)
+kwargles = {'reps': 500,
+            'pca_inc': True,
+            'ranged' : [2,4]}
+
+null_results = [ff.full_func(i,**kwargles) for i in null_list]
 

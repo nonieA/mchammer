@@ -26,8 +26,9 @@ def many_data(k,n,feat,noise,sep,seed):
                          n_redundant=int(round(f * noi, 0)),
                          n_classes=c,
                          n_clusters_per_class=1,
-                         class_sep=s)]
-            for num in n for f in feat for noi in noise for c in k for s in sep]
+                         class_sep=s,
+                         random_state=e)]
+            for num in n for f in feat for noi in noise for c in k for s in sep for e in seed]
     data = [[i[0], i[1][0]] for i in data]
     return(data)
 
