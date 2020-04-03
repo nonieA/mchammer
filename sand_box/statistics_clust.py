@@ -55,7 +55,6 @@ def km_out(df,k, pca_inc = False):
     if pca_inc == True:
         pca = PCA(n_components=0.9)
         df2 = pca.fit_transform(df)
-        print('im doing pca')
     else:
         df2 =df.copy()
     km = KMeans(n_clusters= k, random_state=4, n_init=40)
