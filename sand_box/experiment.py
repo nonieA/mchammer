@@ -53,3 +53,7 @@ col_names = ['drop1','k','drop2','n','drop3','feat','drop4','noise','drop6','sep
 test_split = pd.DataFrame(test_split.tolist(),columns = col_names)
 test_final = pd.concat([test,test_split], axis = 1).drop(['df_type','drop1','drop2','drop3','drop4','drop6'], axis = 1)
 test_final.to_csv('out_data2.csv')
+
+# Negative control
+
+

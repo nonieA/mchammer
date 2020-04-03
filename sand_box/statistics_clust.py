@@ -2,6 +2,7 @@ from statistics import variance
 from sklearn.cluster import KMeans
 from sklearn.metrics import pairwise_distances
 from sklearn.metrics import confusion_matrix
+from sklearn.decomposition import PCA
 import numpy as np
 
 def huberts_gamma(p_mat,c_mat):
@@ -50,12 +51,18 @@ def acc(y_true,y_pred):
     correct = sum(1 for i in range(len(y_true)) if y_true[i] == y_pred2[i])/len(y_true)
     return(correct)
 
-def km_out(df,k):
+def km_out(df,k, pca_inc = False):
+    if pca_inc == True:
+        pca = PCA(n_components=0.9)
+        df2 = pca.fit_transform(df)
+        print('im doing pca')
+    else:
+        df2 =df.copy()
     km = KMeans(n_clusters= k, random_state=4, n_init=40)
-    km = km.fit(df)
+    km = km.fit(df2)
     labels = km.labels_
     c_mat = c_mat_maker(labels)
-    p_mat = pairwise_distances(df)
+    p_mat = pairwise_distances(df2)
     huberts = huberts_gamma(p_mat,c_mat)
     norm = norm_gamma(p_mat, c_mat)
     tss = km.inertia_

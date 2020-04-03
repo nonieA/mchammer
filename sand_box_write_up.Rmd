@@ -7,7 +7,9 @@ output:
   word_document: default
   html_document: default
   fig_caption: yes
-bibleography: My_Collection.bib
+bibliography: My_Collection.bib
+csl: BJP.csl
+
 ---
 
 ```{r setup, include=FALSE}
@@ -38,7 +40,7 @@ grad_cols <- c('#453a49','#541388', '#601286', '#6b1284', '#751482', '#7e1681', 
 There exist many tools to evaluate clusters resulting from patient subtyping studies, however 
 the question is never asked whether the data being clustered actually contains clusters. This 
 is an important question as many commenly used clustering methods such as k-means will find
-clusters independent of any cluster structure existing. A method proposed in Pattern Recognition [@theodoridis2003konstantinos]
+clusters independent of any cluster structure existing. A method proposed in Pattern Recognition [@theodoridis2003konstantinos] 
 uses a hypothesis test to test for cluster structure by using a monte carlo simulation creating a null 
 reference distribution, based on multiple generated data sets which are known to have no underlying cluster 
 structure with the parameters of the original data set. 
@@ -50,7 +52,7 @@ method could also be used to determine number of clusters.
 
 ### Previous Research 
 As mentioned above this method is a development of a method outlined in the book Pattern 
-Recognition. It has been used in practice in the method M3C [-@john2020]
+Recognition. It has been used in practice in the method M3C [@john2020m3c]
 
 #### Pattern Recognition 
 
@@ -96,7 +98,7 @@ __Aim__ M3C uses the monte carlo method outlined above to identify cluster numbe
 clusters in genome data when using consensus clustering. Consensus clustering is a clustering 
 method which is based on stability. It clusters bootstrapped samples of the original data, records 
 the frequency of when each point occurs in the same cluster as each other point and then uses the 
-resulting matrix as a basis of a dissimilarity matrix for clustering. Senbabaofgly [ -@șenbabaouglu2014] 
+resulting matrix as a basis of a dissimilarity matrix for clustering. Senbabaofglu [-@senbabaouglu2014critical] 
 found that this method finds clusters in null data sets. They use Proportion of ambiguos pairs (PAC) 
 statistic compared to a null distribution to identify the best value of K. However the PAC statistic 
 favours higher values of K, so M3C aims to eliminate that bias by turning the comparison to a null 
@@ -271,7 +273,7 @@ tp_bar <- ggplot(data = tp_sense, aes(x = x, y = value, fill = variable)) +
     labs(title = 'Method Sensitivity', x = 'Method', y = '') +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
     scale_x_discrete(labels = function(x) str_wrap(x, width = 18)) +
-    scale_fill_manual(name = "", labels = c("False Negative", "True Positive"), values = cols)
+    scale_fill_manual(name = "", labels = c("False\nNegative", "True\nPositive"), values = cols)
        
     
 tp_fin2 <- tp_only %>% mutate(
@@ -285,9 +287,9 @@ tp_fin2 <- tp_only %>% mutate(
 tp_fin2$sep <- factor(tp_fin2$sep, levels(tp_fin2$sep)[c(3,2,1)])
 
 success_wrap = ggplot(tp_fin2, aes(noise, sep,fill = count)) + geom_tile()+ theme_minimal()
-success_wrap = success_wrap + facet_grid(mc_type ~ index) + 
+success_wrap = success_wrap + facet_grid(mc_type ~ index,labeller = label_wrap_gen(width = 2, multi_line = TRUE)) + 
   labs(title = 'Correctly Identified Cluster Numbers per Method', x = 'Noise Ratio', y = 'Seperation') + 
-  scale_fill_manual(name = 'Number/nof Correct/nValue of K/nIdentified',values = grad_cols[c(1,2,5,10,15,20,25)])
+  scale_fill_manual(name = 'Number\nof Correct\nValue of K\nIdentified',values = grad_cols[c(1,2,5,10,15,20,25)])
 
 tp_count = tp_count %>% mutate(
          index = case_when(index %in% 'hubers' ~ 'Huberts Gamma Statistic',
@@ -299,9 +301,9 @@ tp_count = tp_count %>% mutate(
 tp_count$sep <- factor(tp_count$sep, levels(tp_count$sep)[c(3,2,1)])
 
 sums_wrap <- ggplot(tp_count, aes(noise, sep,fill = sums)) + geom_tile()+ theme_minimal()
-sums_wrap = sums_wrap + facet_grid(mc_type ~ index) + 
+sums_wrap = sums_wrap + facet_grid(mc_type ~ index,labeller = label_wrap_gen(width = 2, multi_line = TRUE)) + 
   labs(title = 'Total Identified Cluster Numbers per Method', x = 'Noise Ratio', y = 'Seperation') +
-  scale_fill_manual(name = 'Number/nof Total/nValue of K/nIdentified', values = grad_cols)
+  scale_fill_manual(name = 'Number\nof Total\nValue of K\nIdentified', values = grad_cols,guide = guide_legend(ncol = 2)) 
 
 tp_pval = tp_pval %>% mutate(
          index = case_when(index %in% 'hubers' ~ 'Huberts Gamma Statistic',
@@ -312,9 +314,9 @@ tp_pval = tp_pval %>% mutate(
                              mc_type %in% 'min_max' ~ 'Min Max')) %>%mutate_all(factor)
 tp_pval$sep <- factor(tp_pval$sep, levels(tp_pval$sep)[c(3,2,1)])
 pval_wrap <- ggplot(tp_pval, aes(noise, sep,fill = Cor)) + geom_tile()+ theme_minimal()
-pval_wrap = pval_wrap + facet_grid(mc_type ~ index) + 
+pval_wrap = pval_wrap + facet_grid(mc_type ~ index, labeller = label_wrap_gen(width = 2, multi_line = TRUE)) + 
   labs(title = 'Correct Cluster Number Predicted by Lowest p Value', x = 'Noise Ratio', y = 'Seperation')+
-  scale_fill_manual(name = 'Number/nof Correct/nValue of K/nIdentified', values = grad_cols[c(1,2,5,10,15,20,25)])
+  scale_fill_manual(name = 'Number\nof Correct\nValue of K\nIdentified', values = grad_cols[c(1,2,5,10,15,20,25)])
   
 
 lower_4 <- function(x){
@@ -329,8 +331,8 @@ upper_4 <- function(x){
  
 tp_km <- tp_acru %>% 
   mutate(Total = replace_na(Total, 0),
-         index = case_when(index %in% 'hubers' ~ 'Huberts Gamma Statistic',
-                           index %in% 'norm' ~ 'Normalised Gamma Statistic',
+         index = case_when(index %in% 'hubers' ~ 'Huberts\nGamma\nStatistic',
+                           index %in% 'norm' ~ 'Normalised\nGamma\nStatistic',
                            index %in% 'tss' ~ 'TSS')) %>% 
   group_by(Total,index) %>% 
   summarise(mean = mean(acru),lower = lower_4(acru), upper = upper_4(acru))%>% 
@@ -427,4 +429,6 @@ However the results were overwhelmingly poor but this is partially due to inaccu
 1. Use PCA before K-means with greater number of random starts to improve performance 
 2. Return metrics on the distributions namely kertosis 
 3. Test against negetive control 
+
+# References 
 
