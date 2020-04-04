@@ -72,3 +72,37 @@ kwargles = {'reps': 500,
 
 null_results = [ff.full_func(i,**kwargles) for i in null_list]
 
+null_out = widen2(null_results)
+
+out = [widen_df(i[1]) for i in impt]
+out2 = pd.concat(out)
+
+out2.to_csv('null_results.csv')
+
+# experiment with pc
+
+k = [2,4,5]
+n = [100]
+feat = [10]
+noise = [0,0.1,0.5]
+sep = [0.5,1,3]
+
+pca_kwargles = {
+    'reps': 500,
+    'pca_inc': True,
+    'ranged' : [2,3,4,5,6]
+}
+
+pca_list = tdg.many_data(k = k,n=n,feat = feat,noise = noise,sep = sep,seed =[4])
+
+pca_results = [ff.full_func(i,**pca_kwargles) for i in pca_list]
+
+test = widen2(pca_results)
+test = test.reset_index()
+test_split = test.df_type.str.split(' ')
+col_names = ['drop1','k','drop2','n','drop3','feat','drop4','noise','drop6','sep']
+test_split = pd.DataFrame(test_split.tolist(),columns = col_names)
+test_final = pd.concat([test,test_split], axis = 1).drop(['df_type','drop1','drop2','drop3','drop4','drop6'], axis = 1)
+test_final.to_csv('out_datapca.csv')
+
+
